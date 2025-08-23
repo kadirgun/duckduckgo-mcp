@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 
 	duckduckgo "github.com/kadirgun/duckduck-go"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -33,7 +34,17 @@ func (s *SearchServer) Search(ctx context.Context, req *mcp.CallToolRequest, arg
 		return nil, nil, err
 	}
 
+	response, err := json.Marshal(results)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	return &mcp.CallToolResult{
 		StructuredContent: results,
+		Content: []mcp.Content{
+			&mcp.TextContent{
+				Text: string(response),
+			},
+		},
 	}, nil, nil
 }
