@@ -1,0 +1,86 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - linux-amd64
+          - linux-arm64
+          - darwin-amd64
+          - darwin-arm64
+          - windows-amd64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.4"
+          cache: true
+
+      - name: Parse target
+        id: parse
+        shell: bash
+        run: |
+          OS="${target%-*}"
+          ARCH="${target#*-}"
+          echo "goos=$OS" >> "$GITHUB_OUTPUT"
+          echo "goarch=$ARCH" >> "$GITHUB_OUTPUT"
+          EXT=""
+          [ "$OS" = "windows" ] && EXT=".exe"
+          echo "ext=$EXT" >> "$GITHUB_OUTPUT"
+          echo "binary=duckduckgo-mcp-${target}${EXT}" >> "$GITHUB_OUTPUT"
+        env:
+          target: ${{ matrix.target }}
+
+      - name: Build
+        run: |
+          GOOS=${{ steps.parse.outputs.goos }} \
+          GOARCH=${{ steps.parse.outputs.goarch }} \
+          CGO_ENABLED=0 \
+          go build -ldflags="-s -w" -o "${{ steps.parse.outputs.binary }}" .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.parse.outputs.binary }}
+          path: ${{ steps.parse.outputs.binary }}
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: binaries
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          cd binaries
+          sha256sum duckduckgo-mcp-* > checksums.txt
+
+      - name: Create Release & Upload
+        uses: softprops/action-gh-release@v2
+        with:
+          files: binaries/*
+          generate_release_notes: true
