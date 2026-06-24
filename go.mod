@@ -3,7 +3,7 @@ module github.com/kadirgun/duckduckgo-mcp
 go 1.24.4
 
 require (
-	github.com/kadirgun/duckduck-go v0.0.0-20251116133542-a7b389586497
+	github.com/kadirgun/duckduck-go v1.0.0
 	github.com/modelcontextprotocol/go-sdk v0.3.0
 )
 
@@ -30,5 +30,4 @@ require (
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/tools v0.39.0 // indirect
-	resty.dev/v3 v3.0.0-beta.3 // indirect
 )
