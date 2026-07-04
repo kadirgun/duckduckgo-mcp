@@ -12,9 +12,9 @@ type SearchServer struct {
 	duck *duckduckgo.DuckDuckGo
 }
 
-func NewSearchServer() *SearchServer {
+func NewSearchServer(opts ...duckduckgo.Option) *SearchServer {
 	return &SearchServer{
-		duck: duckduckgo.New(),
+		duck: duckduckgo.New(opts...),
 	}
 }
 
